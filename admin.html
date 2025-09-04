@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Jogadores - Vôlei</title>
+    <style>
+        /* Estilos re-utilizados e adaptados da aplicação principal */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            grid-column: 1 / -1; /* Ocupa as duas colunas */
+        }
+        header h1 { color: #ffffff; }
+        
+        /* Formulário de Adição */
+        .form-section {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .form-section h2 { margin-top: 0; color: #4dabf7; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #e0e0e0;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #43a047;
+            color: white;
+            font-size: 1.1em;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+        button.edit-mode { background-color: #fdd835; color: #121212; }
+        button:hover { opacity: 0.9; }
+
+        /* Tabela de Jogadores */
+        .table-section h2 { color: #4dabf7; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1e1e1e;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th { background-color: #333; }
+        .player-rating-cell { color: #fdd835; font-size: 1.2em; }
+        .actions-cell button {
+            font-size: 0.9em;
+            padding: 5px 10px;
+            margin-right: 5px;
+            width: auto;
+        }
+        .btn-edit { background-color: #4dabf7; }
+        .btn-delete { background-color: #ef5350; }
+
+        /* Output do JSON */
+        .json-output-section {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+        .json-output-section h2 { color: #66bb6a; }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+        #copy-json-button { margin-top: 10px; width: auto; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Gerenciamento de Jogadores</h1>
+        <p>Adicione, edite ou remova jogadores. Copie o JSON final para atualizar a aplicação.</p>
+    </header>
+
+    <div class="container">
+        <section class="form-section">
+            <h2 id="form-title">Adicionar Novo Jogador</h2>
+            <form id="player-form">
+                <input type="hidden" id="player-id-input">
+                <div class="form-group">
+                    <label for="player-name">Nome do Jogador:</label>
+                    <input type="text" id="player-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="player-rating">Classificação:</label>
+                    <select id="player-rating" required>
+                        <option value="1">1 Estrela (Fraco)</option>
+                        <option value="2">2 Estrelas (Regular)</option>
+                        <option value="3" selected>3 Estrelas (Mediano)</option>
+                        <option value="4">4 Estrelas (Bom)</option>
+                        <option value="5">5 Estrelas (Semi-pro)</option>
+                    </select>
+                </div>
+                <button type="submit" id="submit-button">Adicionar Jogador</button>
+            </form>
+        </section>
+
+        <section class="table-section">
+            <h2>Lista de Jogadores</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Classificação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="player-table-body">
+                    <!-- Linhas da tabela serão inseridas aqui via JS -->
+                </tbody>
+            </table>
+        </section>
+
+        <section class="json-output-section">
+            <h2>JSON Atualizado</h2>
+            <textarea id="json-output" readonly></textarea>
+            <button id="copy-json-button">Copiar JSON</button>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Base de dados inicial (padrão da aplicação)
+            let playersData = [
+                { "id": 1, "nome": "Dudu", "classificacao": 4 }, { "id": 2, "nome": "Neto", "classificacao": 4 },
+                { "id": 3, "nome": "Luisa", "classificacao": 3 }, { "id": 4, "nome": "Cesar", "classificacao": 4 },
+                { "id": 5, "nome": "Fred", "classificacao": 2 }, { "id": 6, "nome": "Igor", "classificacao": 4 },
+                { "id": 7, "nome": "Cassim", "classificacao": 3 }, { "id": 8, "nome": "Gabriela", "classificacao": 3 },
+                { "id": 9, "nome": "Wenya", "classificacao": 3 }, { "id": 10, "nome": "Raylon", "classificacao": 4 },
+                { "id": 11, "nome": "Bruno", "classificacao": 2 }, { "id": 12, "nome": "Tata", "classificacao": 2 },
+                { "id": 13, "nome": "Biancca", "classificacao": 3 }, { "id": 14, "nome": "Mateus", "classificacao": 3 },
+                { "id": 15, "nome": "Luan", "classificacao": 3 }, { "id": 16, "nome": "Mariana", "classificacao": 2 },
+                { "id": 17, "nome": "Lubia", "classificacao": 2 }, { "id": 18, "nome": "Vania", "classificacao": 3 },
+                { "id": 19, "nome": "Luccas", "classificacao": 2 }, { "id": 20, "nome": "Kennedy", "classificacao": 3 },
+                { "id": 21, "nome": "Wheliton", "classificacao": 2 }
+            ];
+
+            const form = document.getElementById('player-form');
+            const formTitle = document.getElementById('form-title');
+            const submitButton = document.getElementById('submit-button');
+            const tableBody = document.getElementById('player-table-body');
+            const jsonOutput = document.getElementById('json-output');
+            const copyJsonButton = document.getElementById('copy-json-button');
+
+            const idInput = document.getElementById('player-id-input');
+            const nameInput = document.getElementById('player-name');
+            const ratingInput = document.getElementById('player-rating');
+
+            function renderTable() {
+                tableBody.innerHTML = '';
+                // Ordena por nome para facilitar a visualização
+                const sortedPlayers = [...playersData].sort((a, b) => a.nome.localeCompare(b.nome));
+
+                sortedPlayers.forEach(player => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${player.nome}</td>
+                        <td class="player-rating-cell">${'★'.repeat(player.classificacao)}</td>
+                        <td class="actions-cell">
+                            <button class="btn-edit" data-id="${player.id}">Editar</button>
+                            <button class="btn-delete" data-id="${player.id}">Excluir</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            function generateJsonOutput() {
+                // Formata o JSON para ser fácil de copiar e colar
+                const jsonString = JSON.stringify(playersData, null, 2);
+                jsonOutput.value = jsonString;
+            }
+
+            function resetForm() {
+                form.reset();
+                idInput.value = '';
+                formTitle.textContent = 'Adicionar Novo Jogador';
+                submitButton.textContent = 'Adicionar Jogador';
+                submitButton.classList.remove('edit-mode');
+            }
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = nameInput.value.trim();
+                const rating = parseInt(ratingInput.value);
+                const id = parseInt(idInput.value);
+
+                if (id) { // Modo de Edição
+                    const playerIndex = playersData.findIndex(p => p.id === id);
+                    if (playerIndex > -1) {
+                        playersData[playerIndex] = { ...playersData[playerIndex], nome: name, classificacao: rating };
+                    }
+                } else { // Modo de Adição
+                    const newId = playersData.length > 0 ? Math.max(...playersData.map(p => p.id)) + 1 : 1;
+                    playersData.push({ id: newId, nome: name, classificacao: rating });
+                }
+
+                renderTable();
+                generateJsonOutput();
+                resetForm();
+            });
+
+            tableBody.addEventListener('click', (e) => {
+                const target = e.target;
+                const id = parseInt(target.dataset.id);
+
+                if (target.classList.contains('btn-delete')) {
+                    if (confirm('Tem certeza que deseja excluir este jogador?')) {
+                        playersData = playersData.filter(p => p.id !== id);
+                        renderTable();
+                        generateJsonOutput();
+                        resetForm(); // Caso o jogador deletado estivesse sendo editado
+                    }
+                }
+
+                if (target.classList.contains('btn-edit')) {
+                    const player = playersData.find(p => p.id === id);
+                    if (player) {
+                        idInput.value = player.id;
+                        nameInput.value = player.nome;
+                        ratingInput.value = player.classificacao;
+
+                        formTitle.textContent = `Editando: ${player.nome}`;
+                        submitButton.textContent = 'Salvar Alterações';
+                        submitButton.classList.add('edit-mode');
+                        nameInput.focus();
+                    }
+                }
+            });
+            
+            copyJsonButton.addEventListener('click', () => {
+                jsonOutput.select();
+                document.execCommand('copy');
+                alert('JSON copiado para a área de transferência!');
+            });
+
+            // Inicialização
+            renderTable();
+            generateJsonOutput();
+        });
+    </script>
+</body>
+</html>
