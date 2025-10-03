@@ -1,47 +1,61 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorteio de Times - Vôlei</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
     <header>
-      <h1>Selecione os Jogadores</h1>
-      <p>Escolha <strong>12 jogadores</strong> para a partida de hoje.</p>
-      <div id="selection-counter">Selecionados: 0 de 12</div>
+        <h1>Selecione os Jogadores</h1>
+        <!-- ID ADICIONADO PARA CONTROLE VIA JS -->
+        <p id="instruction-text">Escolha <strong>12 jogadores</strong> para a partida de hoje.</p>
+        <div id="selection-counter">Selecionados: 0 de 12</div>
     </header>
 
-    <main id="player-list-container"></main>
-
+    <main id="player-list-container">
+        <!-- Os jogadores serão inseridos aqui pelo JavaScript -->
+    </main>
+    
     <div class="options-container">
-      <div class="option-item">
-        <label class="switch-label">Manter Neto & Luisa juntos?</label>
-        <label class="switch">
-          <input type="checkbox" id="couple-mode-toggle" />
-          <span class="slider round"></span>
-        </label>
-      </div>
-      <div class="option-item">
-        <label class="switch-label">Mostrar classificações?</label>
-        <label class="switch">
-          <input type="checkbox" id="show-stars-toggle" />
-          <span class="slider round"></span>
-        </label>
-      </div>
+        <!-- NOVO INTERRUPTOR PARA MODO DE JOGO -->
+        <div class="option-item">
+            <label class="switch-label">Modo 2 Times (8 Jogadores)?</label>
+            <label class="switch">
+                <input type="checkbox" id="two-teams-toggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="option-item">
+            <label class="switch-label">Manter Neto & Luisa juntos?</label>
+            <label class="switch">
+                <input type="checkbox" id="couple-mode-toggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="option-item">
+            <label class="switch-label">Mostrar classificações?</label>
+            <label class="switch">
+                <input type="checkbox" id="show-stars-toggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
     </div>
 
     <div class="button-container">
-      <button id="distribute-button" disabled>Distribuir Times</button>
+        <button id="distribute-button" disabled>Distribuir Times</button>
     </div>
 
     <section id="results-container" class="hidden">
-      <h2>Times Equilibrados!</h2>
-      <div id="teams-output"></div>
+        <h2>Times Equilibrados!</h2>
+        <div id="teams-output">
+            <!-- Os times gerados aparecerão aqui -->
+        </div>
     </section>
-
+    
     <script src="script.js"></script>
-  </body>
+</body>
 </html>
-
